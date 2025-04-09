@@ -1,12 +1,24 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/mongodb.js";
 
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    cartData: { type: Object, default: {} }
-}, { minimize: false })
+const UserModel = sequelize.define("User", {
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
+    cartData: {
+        type: DataTypes.JSON, // Store object as JSON
+        defaultValue: {},
+    },
+});
 
-const userModel = mongoose.models.user || mongoose.model('user',userSchema);
-
-export default userModel
+export default UserModel;

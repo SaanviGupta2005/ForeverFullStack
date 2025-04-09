@@ -1,31 +1,41 @@
-import express from 'express'
-import cors from 'cors'
-import 'dotenv/config'
-import connectDB from './config/mongodb.js'
-import connectCloudinary from './config/cloudinary.js'
-import userRouter from './routes/userRoute.js'
-import productRouter from './routes/productRoute.js'
-import cartRouter from './routes/cartRoute.js'
-import orderRouter from './routes/orderRoute.js'
+import express from 'express';
+import cors from 'cors';
+import 'dotenv/config.js';
+import connectDB, { sequelize } from './config/mongodb.js'; // renamed mongodb.js to db.js (for Sequelize)
+import connectCloudinary from './config/cloudinary.js';
+
+import userRouter from './routes/userRoute.js';
+import productRouter from './routes/productRoute.js';
+import cartRouter from './routes/cartRoute.js';
+import orderRouter from './routes/orderRoute.js';
 
 // App Config
-const app = express()
-const port = process.env.PORT || 4000
-connectDB()
-connectCloudinary()
+const app = express();
+const port = process.env.PORT || 4000;
 
-// middlewares
-app.use(express.json())
-app.use(cors())
+// Connect to DB & Cloudinary
+await connectDB();         // Sequelize DB
+connectCloudinary();
 
-// api endpoints
-app.use('/api/user',userRouter)
-app.use('/api/product',productRouter)
-app.use('/api/cart',cartRouter)
-app.use('/api/order',orderRouter)
+// Middleware
+app.use(express.json());
+app.use(cors());
 
-app.get('/',(req,res)=>{
-    res.send("API Working")
-})
+// API Endpoints
+app.use('/api/user', userRouter);
+app.use('/api/product', productRouter);
+app.use('/api/cart', cartRouter);
+app.use('/api/order', orderRouter);
 
-app.listen(port, ()=> console.log('Server started on PORT : '+ port))
+app.get('/', (req, res) => {
+    res.send('API Working');
+});
+
+// Start Server after syncing models
+sequelize.sync({ alter: true }) // or force: true (for dev resets)
+    .then(() => {
+        app.listen(port, () => console.log('Server started on PORT:', port));
+    })
+    .catch(err => {
+        console.error('DB Sync failed:', err);
+    });
