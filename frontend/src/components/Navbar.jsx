@@ -39,10 +39,10 @@ const Navbar = () => {
             <p>CONTACT</p>
             <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
         </NavLink>
-        <a href="http://localhost:5174/" target='_blank'>
+        {/* <a href="http://localhost:5174/" target='_blank'>
             <p>ADMIN PANEL</p>
             <hr className='w-2/4 border-none h-[1.5px] bg-gray-700 hidden' />
-            </a>
+            </a> */}
         {/* </NavLink> */}
       </ul>
 

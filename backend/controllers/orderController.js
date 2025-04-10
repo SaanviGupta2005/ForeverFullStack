@@ -1,5 +1,6 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import sendOrderMail from '../utils/sendOrderMail.js';
 import Stripe from "stripe";
 import Razorpay from "razorpay";
 
@@ -28,8 +29,21 @@ const placeOrder = async (req, res) => {
             date: new Date(),
         };
 
-        await orderModel.create(orderData);
+        const newOrder = await orderModel.create(orderData);
         await userModel.update({ cartData: {} }, { where: { id: userId } });
+
+        const user = await userModel.findOne({ where: { id: userId } });
+
+        // Send Email
+        if (user) {
+            await sendOrderMail(user.email, user.name || "Customer", {
+                id: newOrder.id,
+                items,
+                address,
+                amount,
+                paymentMethod: "COD",
+            });
+        }
 
         res.json({ success: true, message: "Order Placed" });
     } catch (error) {
@@ -37,6 +51,7 @@ const placeOrder = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
 
 // Place order - Stripe
 const placeOrderStripe = async (req, res) => {
@@ -96,6 +111,20 @@ const verifyStripe = async (req, res) => {
         if (success === "true") {
             await orderModel.update({ payment: true }, { where: { id: orderId } });
             await userModel.update({ cartData: {} }, { where: { id: userId } });
+
+            const order = await orderModel.findOne({ where: { id: orderId } });
+            const user = await userModel.findOne({ where: { id: userId } });
+
+            if (order && user) {
+                await sendOrderMail(user.email, user.name || "Customer", {
+                    id: order.id,
+                    items: order.items,
+                    address: order.address,
+                    amount: order.amount,
+                    paymentMethod: "Stripe",
+                });
+            }
+
             res.json({ success: true });
         } else {
             await orderModel.destroy({ where: { id: orderId } });
@@ -106,6 +135,7 @@ const verifyStripe = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
 
 // Place order - Razorpay
 const placeOrderRazorpay = async (req, res) => {
